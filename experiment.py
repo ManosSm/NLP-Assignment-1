@@ -11,6 +11,8 @@ import itertools
 
 import smlp
 import mmlp
+import loglin
+from sklearn.metrics import accuracy_score
 
 def train_bpe_tokenizer(corpus, vocab_size, min_frequency, pretokenizer=Metaspace(), unk_token="[UNK]"):
     """
@@ -74,7 +76,7 @@ def cross_validation_split(pairs, k, seed=0):
 
     return cross_validation_sets
 
-def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", smlp_args=dict(), mmlp_args=dict()):
+def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", loglin_args=dict(), smlp_args=dict(), mmlp_args=dict()):
     """
     Trains and evaluates k models using a k-fold data split for cross validation. 
     This function returns a dictionary with 
@@ -112,13 +114,13 @@ def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:st
             )
             models[fold] = f'{fold_folder}/model'
             accuracies[fold] = metrics[best_epoch]['val_metrics']['accuracy']         
-        # elif model_option == 'logistic':                        
-        #     llmodel = loglin.fit(training_set, encoder, save_to=f'{fold_folder}/model', **loglin_args) 
-        #     models[fold] = f'{fold_folder}/model'
+        elif model_option == 'logistic':                        
+            llmodel = loglin.fit(training_set, encoder, save_to=f'{fold_folder}/model', **loglin_args) 
+            models[fold] = f'{fold_folder}/model'
             
-        #     predictions[fold] = loglin.predict([text for text, gold_label in validation_set], llmodel, encoder)    
-        #     gold_labels_validation = [gold_label for text, gold_label in validation_set]
-        #     accuracies[fold] = accuracy_score(gold_labels_validation, predictions[fold])
+            predictions[fold] = loglin.predict([text for text, gold_label in validation_set], llmodel, encoder)    
+            gold_labels_validation = [gold_label for text, gold_label in validation_set]
+            accuracies[fold] = accuracy_score(gold_labels_validation, predictions[fold])
         else:
             raise ValueError(f"Unkonwn model_option={model_option}")
 
