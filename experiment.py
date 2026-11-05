@@ -10,6 +10,7 @@ import numpy as np
 import itertools
 
 import smlp
+import mmlp
 
 def train_bpe_tokenizer(corpus, vocab_size, min_frequency, pretokenizer=Metaspace(), unk_token="[UNK]"):
     """
@@ -73,7 +74,7 @@ def cross_validation_split(pairs, k, seed=0):
 
     return cross_validation_sets
 
-def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", smlp_args=dict()):
+def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", smlp_args=dict(), mmlp_args=dict()):
     """
     Trains and evaluates k models using a k-fold data split for cross validation. 
     This function returns a dictionary with 
@@ -99,12 +100,18 @@ def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:st
         fold_folder.mkdir(parents=True, exist_ok=True) 
 
         #TODO add for other models
-        if model_option == 'mlp':            
+        if model_option == 'smlp':          
             metrics, best_epoch, predictions[fold] = smlp.train_neural_network_model(
                 training_set, validation_set, encoder, save_to=f'{fold_folder}/model', **smlp_args
             )
             models[fold] = f'{fold_folder}/model'
-            accuracies[fold] = metrics[best_epoch]['val_metrics']['accuracy']            
+            accuracies[fold] = metrics[best_epoch]['val_metrics']['accuracy']
+        elif model_option == 'mmlp':          
+            metrics, best_epoch, predictions[fold] = mmlp.train_neural_network_model(
+                training_set, validation_set, encoder, save_to=f'{fold_folder}/model', **mmlp_args
+            )
+            models[fold] = f'{fold_folder}/model'
+            accuracies[fold] = metrics[best_epoch]['val_metrics']['accuracy']         
         # elif model_option == 'logistic':                        
         #     llmodel = loglin.fit(training_set, encoder, save_to=f'{fold_folder}/model', **loglin_args) 
         #     models[fold] = f'{fold_folder}/model'
