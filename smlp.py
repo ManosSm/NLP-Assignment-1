@@ -14,16 +14,14 @@ class SparseMLP(nn.Module):
     """One-hidden-layer MLP that accepts sparse input tensors.
 
     Inputs: feature vectors of size `input_dim` (e.g. bag-of-words).
-    Process: sparse matmul into a dense hidden layer, ReLU + dropout, linear (num_classes) and log-softmax outputs
-        log-softmax, rather than softmax, for numerical stability
-    Output: logprobs over `num_classes`.
+    Process: sparse matmul into a dense hidden layer, ReLU + dropout, linear and sigmoid output
+    Output: probs for class 1.
     """
 
-    def __init__(self, input_dim, hidden_dim, num_classes, dropout=0.2):
+    def __init__(self, input_dim, hidden_dim, dropout=0.2):
         """
         input_dim: size of the input feature space (e.g. vocabulary size)
         hidden_dim: width of the hidden layer
-        num_classes: number of output labels
         dropout: fraction of hidden units zeroed during training (regularisation)
         """
         super().__init__()
@@ -41,20 +39,20 @@ class SparseMLP(nn.Module):
 
         # Everything after the first layer is dense.
         self.output = nn.Sequential(
-            nn.Linear(hidden_dim, num_classes)
+            nn.Linear(hidden_dim, 1)
         )
 
         nn.init.kaiming_uniform_(self.weight, nonlinearity='relu')
 
     def forward(self, x):
-        """Map a sparse batch [batch, input_dim] to class log-probabilities [batch, num_classes]."""
+        """Map a sparse batch [batch, input_dim] to class probabilities [batch, 1]."""
         # First matmul keeps x sparse; result is dense from here on.
         x = torch.sparse.mm(x, self.weight)
         x = x + self.bias
 
         x = self.activation(x)
         x = self.dropout(x)
-        # logprobs
+        # probs
         return self.output(x)
 
 def scipy_to_torch_sparse(x):
@@ -64,7 +62,7 @@ def scipy_to_torch_sparse(x):
     Output: torch sparse tensor with the same shape and non-zero values.
     """
     x = x.tocoo()
-    indices = torch.tensor([x.row, x.col], dtype=torch.long)
+    indices = torch.tensor(np.vstack((x.row, x.col)), dtype=torch.long)
     values = torch.tensor(x.data, dtype=torch.float32)
 
     return torch.sparse_coo_tensor(indices, values, size=x.shape).coalesce()
@@ -134,7 +132,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device="cpu"):
 
         # accumulate weighted loss and correct predictions for epoch averages
         total_loss += loss.item() * y_batch.size(0)
-        predictions = (probs > 0).long().squeeze(1) # get the predicted class
+        predictions = (probs >= 0).long().squeeze(1) # get the predicted class
         total_correct += (predictions == y_batch).sum().item() # count the number of correct predictions
         total_examples += y_batch.size(0) # count the number of examples
 
@@ -184,12 +182,12 @@ def evaluate(model, dataloader, criterion, device="cpu"):
         "accuracy": total_correct / total_examples
     }, torch.cat([t.detach().cpu() for t in all_preds]).numpy()
 
-def train_neural_network_model(training_set, validation_set, num_classes, encoder, save_to,   
+def train_neural_network_model(training_set, validation_set, encoder, save_to,   
                                 hidden_dim=128, dropout=0.1, batch_size=64, learning_rate=1e-3, 
                                 weight_decay=1e-4, num_epochs=20, device=torch.device("cpu")):
     """Encode texts, train SparseMLP, and checkpoint the best validation model.
 
-    Inputs: train/val (text, label) pairs, num_classes, encoder (text -> sparse vector), path prefix to save weights,
+    Inputs: train/val (text, label) pairs, encoder (text -> sparse vector), path prefix to save weights,
             plus standard training hyperparameters.
     Process: vectorise documents, build sparse dataloaders, train for `num_epochs`, save best-by-val-loss.
     Output: per-epoch metrics list, best epoch index, and validation predictions from the best model.
@@ -237,14 +235,13 @@ def train_neural_network_model(training_set, validation_set, num_classes, encode
     with open(f"{save_to}.json", "w", encoding="utf-8") as f:
         args = {
             'input_dim': len(encoder), 
-            'hidden_dim': hidden_dim, 
-            'num_classes': num_classes, 
-            'dropout': dropout,
+            'hidden_dim': hidden_dim,
+            'dropout': dropout
         }
         json.dump(args, f, indent=2, ensure_ascii=False)
         
-    # Create the model based on the input dimension, chosen hidden dimension, number of classification classes and dropout rate
-    model = SparseMLP(input_dim=len(encoder), hidden_dim=hidden_dim, num_classes=num_classes, dropout=dropout).to(device)
+    # Create the model based on the input dimension, chosen hidden dimension and dropout rate
+    model = SparseMLP(input_dim=len(encoder), hidden_dim=hidden_dim, dropout=dropout).to(device)
     criterion = nn.BCEWithLogitsLoss() # create the loss function
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay) # create the optimizer
 
@@ -308,7 +305,7 @@ def load(path, device="cpu"):
 
 def predict_probs(texts, model, encoder, batch_size=10):
     """
-    Return a numpy array with shape [num_texts, num_classes] with the pmfs of the input texts as predicted by the model.
+    Return a numpy array with shape [num_texts, 1] with the pmfs of the input texts as predicted by the model.
     
     texts: list of texts, each a string
     model: trained model
@@ -339,8 +336,8 @@ def predict_probs(texts, model, encoder, batch_size=10):
             # move the batch to the device
             x_batch = x_batch.to(device) 
             y_batch = y_batch.to(device)
-            logprobs = model(x_batch) # forward pass
+            probs = model(x_batch) # forward pass
             # accumulate metrics; also keep predictions for later use
-            all_probs.extend(logprobs.exp().detach().cpu().numpy())
+            all_probs.extend(probs.detach().cpu().numpy())
             
     return np.array(all_probs)

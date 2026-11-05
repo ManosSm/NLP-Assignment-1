@@ -73,7 +73,7 @@ def cross_validation_split(pairs, k, seed=0):
 
     return cross_validation_sets
 
-def cross_validation_experiment(data_splits, num_classes, encoder: 'Encoder', model_option:str, save_to="tmp", smlp_args=dict()):
+def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", smlp_args=dict()):
     """
     Trains and evaluates k models using a k-fold data split for cross validation. 
     This function returns a dictionary with 
@@ -101,7 +101,7 @@ def cross_validation_experiment(data_splits, num_classes, encoder: 'Encoder', mo
         #TODO add for other models
         if model_option == 'mlp':            
             metrics, best_epoch, predictions[fold] = smlp.train_neural_network_model(
-                training_set, validation_set, num_classes, encoder, save_to=f'{fold_folder}/model', **smlp_args
+                training_set, validation_set, encoder, save_to=f'{fold_folder}/model', **smlp_args
             )
             models[fold] = f'{fold_folder}/model'
             accuracies[fold] = metrics[best_epoch]['val_metrics']['accuracy']            
