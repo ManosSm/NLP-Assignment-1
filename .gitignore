@@ -1,15 +1,12 @@
-.vscode/settings.json
-__pycache__/smlp.cpython-310.pyc
-__pycache__/experiment.cpython-310.pyc
-__pycache__/clslib.cpython-310.pyc
-results/singleMLP_bow-enc/seed-0/fold-0/model.json
-results/singleMLP_bow-enc/seed-0/fold-0/model.pt
-results/singleMLP_bow-enc/seed-0/fold-1/model.json
-results/singleMLP_bow-enc/seed-0/fold-1/model.pt
-results/singleMLP_bow-enc/seed-0/fold-2/model.json
-results/singleMLP_bow-enc/seed-0/fold-2/model.pt
-results/singleMLP_bow-enc/seed-0/fold-3/model.json
-results/singleMLP_bow-enc/seed-0/fold-3/model.pt
-results/singleMLP_bow-enc/seed-0/fold-4/model.json
-results/singleMLP_bow-enc/seed-0/fold-4/model.pt
-__pycache__/analysis.cpython-310.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Editor / IDE configurations
+.vscode/
+.idea/
+
+# Deep learning experimental results and model checkpoints
+results/
