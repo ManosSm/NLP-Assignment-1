@@ -2,7 +2,7 @@ from scipy.sparse import csr_matrix
 from torch.utils.data import Dataset
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import time
 import scipy
