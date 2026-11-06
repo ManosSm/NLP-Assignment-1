@@ -1,5 +1,6 @@
 from tokenizers import Tokenizer
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 class NamedClasses:
     """
@@ -88,3 +89,33 @@ class TokenIndicator(Encoder):
         vector[unique_token_ids] = 1
 
         return vector
+
+
+class TFIDF(Encoder):
+
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+        self.vectorizer = TfidfVectorizer(
+            tokenizer=lambda text: tokenizer.encode(text).tokens,
+            vocabulary=tokenizer.get_vocab(),
+            lowercase=False,
+            token_pattern=None
+        )
+
+    def __len__(self):
+        return len(self.tokenizer.get_vocab())
+
+    def fit(self, texts):
+        self.vectorizer.fit(texts)
+        return self
+
+    def __call__(self, text):
+        return self.vectorizer.transform([text]).toarray()[0]
+
+    def save(self, path):
+        np.save(path, self.vectorizer.idf_)
+
+    def load(self, path):
+        self.vectorizer.idf_ = np.load(path)
+        return self
