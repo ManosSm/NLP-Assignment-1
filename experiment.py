@@ -76,7 +76,7 @@ def cross_validation_split(pairs, k, seed=0):
 
     return cross_validation_sets
 
-def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", loglin_args=dict(), smlp_args=dict(), mmlp_args=dict()):
+def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:str, save_to="tmp", loglin_args=dict(), smlp_args=dict(), mmlp_args=dict(), fit_encoder=False):
     """
     Trains and evaluates k models using a k-fold data split for cross validation. 
     This function returns a dictionary with 
@@ -100,6 +100,10 @@ def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:st
 
         fold_folder = Path(f"{save_to}/fold-{fold}")
         fold_folder.mkdir(parents=True, exist_ok=True) 
+
+        if fit_encoder:
+            encoder.fit([text for text, label in training_set])
+            encoder.save(fold_folder / "tfidf_idf.npy")
 
         #TODO add for other models
         if model_option == 'smlp':          
