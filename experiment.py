@@ -105,7 +105,6 @@ def cross_validation_experiment(data_splits, encoder: 'Encoder', model_option:st
             encoder.fit([text for text, label in training_set])
             encoder.save(fold_folder / "tfidf_idf.npy")
 
-        #TODO add for other models
         if model_option == 'smlp':          
             metrics, best_epoch, predictions[fold] = smlp.train_neural_network_model(
                 training_set, validation_set, encoder, save_to=f'{fold_folder}/model', **smlp_args
