@@ -1,0 +1,6 @@
+model,accuracy,run,fold,seed
+logistic_bow-enc,0.7853749072011879,0,0,0
+logistic_bow-enc,0.7792873051224944,0,1,0
+logistic_bow-enc,0.7829250185597625,0,2,0
+logistic_bow-enc,0.7842613214550854,0,3,0
+logistic_bow-enc,0.7814240106912169,0,4,0
