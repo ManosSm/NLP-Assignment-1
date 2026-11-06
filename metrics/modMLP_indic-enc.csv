@@ -1,0 +1,6 @@
+model,accuracy,run,fold,seed
+modMLP_indic-enc,0.892724573125464,0,0,0
+modMLP_indic-enc,0.9037119524870082,0,1,0
+modMLP_indic-enc,0.901336302895323,0,2,0
+modMLP_indic-enc,0.8926503340757238,0,3,0
+modMLP_indic-enc,0.9007350211597001,0,4,0
