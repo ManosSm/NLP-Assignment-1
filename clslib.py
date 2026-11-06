@@ -1,6 +1,8 @@
 from tokenizers import Tokenizer
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.util import bigrams
+from collections import Counter
 
 class NamedClasses:
     """
@@ -70,6 +72,28 @@ class BagOfWords(Encoder):
         tokens = self.tokenizer.encode(x).tokens
         return np.array([tokens.count(w) for w in self._vocab])
 
+class BagOfBigrams(Encoder):
+    def __init__(self, bigram_vocab: list, tokenizer: Tokenizer):
+        """
+        This encoder has one dimension for each bigram in 'vocab'. 
+        """
+        self._vocab = tuple(bigram_vocab)
+        self.tokenizer = tokenizer
+    
+    def __len__(self):
+        """Number of dimensions"""
+        return len(self._vocab)
+
+    def __call__(self, x):
+        """
+        Our encoder employs BPE crude tokeniser and counts 
+        the number of appearances in x of the words in its vocabulary.
+        """
+        tokens = self.tokenizer.encode(x).tokens
+        bigram_list = list(bigrams(tokens))
+        counts = Counter(bigram_list)
+        return np.array([counts[w] for w in self._vocab])
+    
 class TokenIndicator(Encoder):
 
     def __init__(self, tokenizer: Tokenizer):
