@@ -1,0 +1,6 @@
+model,accuracy,run,fold,seed
+logistic_tfidf-enc,0.785449146250928,0,0,0
+logistic_tfidf-enc,0.7840386043058649,0,1,0
+logistic_tfidf-enc,0.7873051224944321,0,2,0
+logistic_tfidf-enc,0.7869339272457313,0,3,0
+logistic_tfidf-enc,0.7826119236765907,0,4,0
